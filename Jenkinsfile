@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage('Cloning our Git') {
             steps {
-                git clone 'https://github.com/Naz513/test2.git'
+                git url: 'https://github.com/Naz513/test2.git', branch: 'main'
             }
         }
         stage('Building our image') {
