@@ -1,42 +1,42 @@
 pipeline {
-    environment {
-        registry = "naz513/nahidrepo"
-        registryCredentail = 'docker_id'
-        dockerImage = ''
-    }
-    agent {
-        node {
-            label 'nodejs'
-        }
-    }
-    options {
-        timeout(time: 20, unit: 'MINUTES')
-    }
+    agent any
+
     stages {
-        stage('Cloning our Git') {
+        stage('Clone') {
             steps {
-                git url: 'https://github.com/Naz513/test2.git', branch: 'main'
+                git url: 'https://github.com/Naz513/test2', branch: 'main'
             }
         }
-        stage('Building our image') {
+        stage ('Artifactory configuration') {
+            steps {
+                rtServer (
+                    id: "ARTIFACTORY_SERVER",
+                    url: "https://msitest.jfrog.io/artifactory",
+                    credentialsId: 'jfrog_id'
+                )
+            }
+        }
+        stage('Build docker image') {
             steps {
                 script {
-                    dockerImage = docker.build registry + ":$BUILD_NUMBER"
+                    def app = docker.build("msitest.jfrog.io/msaquib/my:1")
                 }
             }
         }
-        stage('Deploy our Image') {
+        stage('Push Image to Artifactory') {
             steps {
-                script {
-                    docker.withRegistry('', registryCredentail) {
-                        dockerImage.push()
-                    }
-                }
+                rtDockerPush(
+                    serverId: "ARTIFACTORY_SERVER",
+                    image: "msitest.jfrog.io/msaquib/my:1",
+                    targetRepo: 'msaquib'
+                )
             }
         }
-        stage('Cleaning up') {
+        stage ('Publish build info') {
             steps {
-                sh "docker rmi $registry:$BUILD_NUMBER"
+                rtPublishBuildInfo (
+                    serverId: "ARTIFACTORY_SERVER"
+                )
             }
         }
     }
