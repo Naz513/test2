@@ -1,10 +1,17 @@
 pipeline {
     environment {
-    registry = "naz513/nahidrepo"
-    registryCredentail = 'docker_id'
-    dockerImage = ''
+        registry = "naz513/nahidrepo"
+        registryCredentail = 'docker_id'
+        dockerImage = ''
     }
-    agent any
+    agent {
+        node {
+            label 'nodejs'
+        }
+    }
+    options {
+        timeout(time: 20, unit: 'MINUTES')
+    }
     stages {
         stage('Cloning our Git') {
             steps {
